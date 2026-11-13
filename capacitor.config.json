@@ -1,0 +1,8 @@
+{
+  "appId": "kr.instrantal.ledger",
+  "appName": "석재 가계부",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false, "backgroundColor": "#F2F4F1" },
+  "plugins": {}
+}

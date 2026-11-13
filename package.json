@@ -1,0 +1,24 @@
+{
+  "name": "daejeon-rental-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "석재 가계부 — 장부·세무·캐릭터 성장 (안드로이드/웹)",
+  "scripts": {
+    "build": "node scripts/build-www.mjs",
+    "android:prepare": "node scripts/prepare-android.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/browser": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/share": "^7.0.0",
+    "xlsx": "0.18.5"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}
