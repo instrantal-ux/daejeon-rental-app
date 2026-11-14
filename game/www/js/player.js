@@ -6,6 +6,7 @@ function faceTexture() {
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const g = c.getContext("2d");
   g.fillStyle = "#f3d3b8"; g.fillRect(0, 0, 256, 256);
+  g.translate(128, 0); g.scale(0.42, 1); g.translate(-128, 0);          // 구에 감기니까 가로로 모아 그린다
   const eye = (x) => {
     g.fillStyle = "#fff"; g.beginPath(); g.ellipse(x, 128, 20, 24, 0, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#2f8f6a"; g.beginPath(); g.ellipse(x, 131, 13, 19, 0, 0, Math.PI * 2); g.fill();     // 에메랄드 눈
@@ -62,13 +63,14 @@ export class Player {
     torso.add(this.armL, this.armR);
     // 망토
     this.cape = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.25, 4, 8), capeM);
-    this.cape.position.set(0, 0.98, 0.17); this.cape.rotation.x = 0.18; this.cape.geometry.translate(0, -0.6, 0); torso.add(this.cape);
+    this.cape.position.set(0, 1.0, 0.27); this.cape.rotation.x = 0.22; this.cape.geometry.translate(0, -0.6, 0); torso.add(this.cape);
     // 머리
     const head = new THREE.Group(); head.position.y = 1.24; this.head = head;
     const face = new THREE.Mesh(new THREE.SphereGeometry(0.26, 22, 16), new THREE.MeshStandardMaterial({ map: faceTexture(), roughness: 0.6 }));
-    face.rotation.y = Math.PI; head.add(face);
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.29, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.6), hairM); hair.position.y = 0.03; head.add(hair);
-    const bang = new THREE.Mesh(new THREE.SphereGeometry(0.285, 14, 8, Math.PI * 0.2, Math.PI * 0.6, Math.PI * 0.35, Math.PI * 0.28), hairM); bang.rotation.y = Math.PI; bang.position.set(0.03, 0.02, -0.02); head.add(bang);
+    face.rotation.y = Math.PI / 2; head.add(face);                               // 텍스처 중앙(눈·입)이 -Z(앞)를 보게
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.29, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.42), hairM); hair.position.y = 0.03; head.add(hair);   // 정수리
+    const back = new THREE.Mesh(new THREE.SphereGeometry(0.3, 22, 16, 0, Math.PI, Math.PI * 0.3, Math.PI * 0.5), hairM); back.position.y = 0.0; back.scale.set(1, 1.25, 1.05); head.add(back);   // 뒷머리(+Z)
+    const bang = new THREE.Mesh(new THREE.SphereGeometry(0.295, 16, 8, Math.PI * 1.05, Math.PI * 0.9, Math.PI * 0.2, Math.PI * 0.17), hairM); bang.position.set(0, 0.03, 0); head.add(bang);   // 앞머리(-Z, 눈 위까지)
     this.tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.8, 6, 10), hairM); this.tail.position.set(0, -0.3, 0.22); this.tail.rotation.x = 0.25; head.add(this.tail);   // 긴 장발
     const sideL = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.4, 4, 8), hairM); sideL.position.set(-0.25, -0.12, -0.02); head.add(sideL);
     const sideR = sideL.clone(); sideR.position.x = 0.25; head.add(sideR);
@@ -79,7 +81,7 @@ export class Player {
     // 손 도구 자리 (오른손)
     this.hand = new THREE.Group(); this.hand.position.set(0.02, -0.64, 0); this.armR.add(this.hand);
     // 등의 검 (기본 무기, 도구 미장착 시 보임)
-    this.sword = this._sword(steel, gold, dark); this.sword.position.set(0.12, 0.95, 0.22); this.sword.rotation.set(0.1, 0, -0.55); torso.add(this.sword);
+    this.sword = this._sword(steel, gold, dark); this.sword.position.set(0.12, 0.95, 0.22); this.sword.rotation.set(0.15, 0, -0.95); torso.add(this.sword);
     // 그림자 원판
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.03; this.shadow = shadow; g.add(shadow);
@@ -155,7 +157,7 @@ export class Player {
     this.vel.y -= (this.swimming ? 12 : 26) * dt;
     this.pos.y += this.vel.y * dt;
     if (this.pos.y <= floor) { this.pos.y = floor; this.vel.y = 0; this.onGround = true; } else if (this.pos.y > floor + 0.05) this.onGround = false;
-    this.group.rotation.y = this.yaw;
+    this.group.rotation.y = this.yaw + Math.PI;
     // 애니메이션
     const sp = Math.hypot(this.vel.x, this.vel.z);
     this.runT += dt * (2 + sp * 1.6);

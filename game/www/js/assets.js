@@ -56,3 +56,18 @@ export function waterNormalTexture() {
   g.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
 }
+// 나뭇잎 뭉치 카드 텍스처 (직접 그림) — 교차 판에 붙여 나무 수관을 만든다
+export function leafCardTexture() {
+  const S = 256, c = document.createElement("canvas"); c.width = S; c.height = S; const g = c.getContext("2d");
+  g.clearRect(0, 0, S, S);
+  const cx = S / 2, cy = S / 2 + 10;
+  for (let i = 0; i < 260; i++) {
+    const a = Math.random() * Math.PI * 2, r = Math.pow(Math.random(), 0.6) * 112;
+    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * 0.9;
+    const shade = 0.55 + Math.random() * 0.55, d = 1 - r / 125;
+    const R = Math.round(40 * shade + 30 * d), G = Math.round(95 * shade + 55 * d), B = Math.round(30 * shade + 10 * d);
+    g.fillStyle = `rgb(${R},${G},${B})`;
+    g.beginPath(); g.ellipse(x, y, 7 + Math.random() * 9, 4 + Math.random() * 6, Math.random() * Math.PI, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}

@@ -32,7 +32,7 @@ export class Game {
     this.camYaw = 0.6; this.camPitch = 0.42; this.camDist = 7.5;
     this.sun = new THREE.DirectionalLight(0xffffff, 2.2); this.scene.add(this.sun); this.scene.add(this.sun.target);
     this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048); this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.03;
-    const sc = this.sun.shadow.camera; sc.left = sc.bottom = -45; sc.right = sc.top = 45; sc.near = 10; sc.far = 320;
+    const sc = this.sun.shadow.camera; sc.left = sc.bottom = -45; sc.right = sc.top = 45; sc.near = 10; sc.far = 320; sc.updateProjectionMatrix();
     this.hemi = new THREE.HemisphereLight(0xbfdfff, 0x6b5a3a, 0.9); this.scene.add(this.hemi);
     this.player = new Player(); this.scene.add(this.player.group);
     this.input = new Input(document.body);
@@ -152,12 +152,12 @@ export class Game {
     const a = this.dayT * Math.PI * 2;                  // 0 = 자정
     const sunH = -Math.cos(a);                          // -1 자정 … 1 정오
     const day = THREE.MathUtils.clamp((sunH + 0.15) / 0.5, 0, 1);
-    this.sun.position.set(Math.sin(a) * 100, sunH * 100 + 20, 40).add(this.player.pos); this.sun.target.position.copy(this.player.pos);
-    this.sun.intensity = 0.15 + day * 2.1; this.sun.color.setHSL(0.09, 0.6, 0.55 + day * 0.45);
-    this.hemi.intensity = 0.25 + day * 0.75;
+    this.sun.position.set(Math.sin(a) * 100, Math.max(sunH, 0.35) * 100 + 20, 40).add(this.player.pos); this.sun.target.position.copy(this.player.pos);
+    this.sun.intensity = 0.45 + day * 1.8; this.sun.color.setHSL(day < 0.2 ? 0.6 : 0.09, day < 0.2 ? 0.3 : 0.6, 0.6 + day * 0.4);
+    this.hemi.intensity = 0.6 + day * 0.5;
     const sky = new THREE.Color(this.world.def.sky), night = new THREE.Color(0x0a0e22), dusk = new THREE.Color(0xff8a5a);
     const c = night.clone().lerp(sky, day); if (day > 0.05 && day < 0.6) c.lerp(dusk, (0.6 - Math.abs(day - 0.3) * 2) * 0.5);
-    if (this.env) { this.scene.backgroundIntensity = 0.12 + day * 0.88; this.scene.environmentIntensity = 0.25 + day * 0.75; this.scene.backgroundBlurriness = 0.02; }
+    if (this.env) { this.scene.backgroundIntensity = 0.22 + day * 0.78; this.scene.environmentIntensity = 0.45 + day * 0.55; this.scene.backgroundBlurriness = 0.02; }
     else this.scene.background = c;
     this.scene.fog.color.copy(c);
     this.scene.fog.near = this.world.def.fogNear * (0.6 + day * 0.4); this.scene.fog.far = this.world.def.fogFar * (0.55 + day * 0.45);

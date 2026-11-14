@@ -1,7 +1,7 @@
 // 세계(지형·물·소품·풀) 생성. 사진 텍스처가 있으면 섞어 칠하고(스플랫), 없으면 단색.
 import * as THREE from "three";
 import { makeNoise } from "./noise.js";
-import { A, grassBladeTexture, waterNormalTexture } from "./assets.js";
+import { A, grassBladeTexture, waterNormalTexture, leafCardTexture } from "./assets.js";
 
 export const SIZE = 640;
 const SEG = 180;
@@ -9,9 +9,9 @@ export const WORLDS = [
   { id: 0, name: "초록 평원", seed: 20261114, sky: 0x9fd3ff, hdri: "day", fogNear: 70, fogFar: 300, amp: 16, water: 1.2,
     low: 0x7fbf5e, high: 0x5e8f4a, cliff: 0x8a7e6a, peak: 0xe0e4df, sand: 0xe9d99a, tint: 0xffffff,
     tex: { base: "grass", slope: "rock", low: "sand", high: "rock" },
-    props: { tree: 1.0, rock: 0.6, bush: 0.8, ore: 0.18, crystal: 0.03, grass: 1 }, treeColor: 0x3f8a3a, trunk: 0x6b4a2b, rockColor: 0x8a8a84, waterColor: 0x2f7fc8 },
+    props: { tree: 1.0, rock: 0.6, bush: 0.8, ore: 0.18, crystal: 0.03, grass: 1 }, treeColor: 0x2f6a2a, trunk: 0x6b4a2b, rockColor: 0x8a8a84, waterColor: 0x2f7fc8 },
   { id: 1, name: "붉은 사막", seed: 7777, sky: 0xffcf9a, hdri: "desert", fogNear: 60, fogFar: 280, amp: 22, water: -5,
-    low: 0xe0ac62, high: 0xc0823f, cliff: 0x8a4e2a, peak: 0xf0d2a4, sand: 0xe8bf7f, tint: 0xffd9b0,
+    low: 0xe0ac62, high: 0xc0823f, cliff: 0x8a4e2a, peak: 0xf0d2a4, sand: 0xe8bf7f, tint: 0xffe8c8, texLight: 0.95,
     tex: { base: "sand", slope: "desert", low: "sand", high: "rock" },
     props: { tree: 0.35, rock: 0.9, bush: 0.3, ore: 0.5, crystal: 0.15, grass: 0.15 }, treeColor: 0x5aa050, trunk: 0x6c8a4a, rockColor: 0xa06a4a, waterColor: 0x3a8fbf },
   { id: 2, name: "하얀 설원", seed: 4242, sky: 0xdbe8f5, hdri: "snow", fogNear: 45, fogFar: 220, amp: 28, water: -2,
@@ -65,7 +65,7 @@ export class World {
       splat[i * 4] = wBase; splat[i * 4 + 1] = wSlope; splat[i * 4 + 2] = wLow; splat[i * 4 + 3] = wHigh;
       const t = THREE.MathUtils.clamp((h - 2) / (w.amp * 1.2), 0, 1);
       tmp.copy(cLow).lerp(cHigh, t); if (wHigh > 0) tmp.lerp(cPeak, wHigh); if (wSlope > 0) tmp.lerp(cCliff, wSlope); if (wLow > 0) tmp.lerp(cSand, wLow);
-      if (hasTex) tmp.lerp(white, 0.7).multiply(tint);
+      if (hasTex) tmp.lerp(white, w.texLight || 0.7).multiply(tint);
       colors[i * 3] = tmp.r; colors[i * 3 + 1] = tmp.g; colors[i * 3 + 2] = tmp.b;
       if (uv) uv.setXY(i, (x + SIZE / 2) / 7, (z + SIZE / 2) / 7);
     }
@@ -109,7 +109,7 @@ export class World {
         if (slope > 2.4 && type !== "rock" && type !== "ore" && type !== "crystal") continue;
         if (type === "crystal" && h < w.amp * 0.6 && this.rnd() < 0.7) continue;
         if (Math.hypot(x, z) < 10) continue;
-        list.push({ type, x, y: h, z, rot: this.rnd() * Math.PI * 2, s: 0.75 + this.rnd() * 0.6, hp: PROP_INFO[type].hp, alive: true, dead: 0, tint: 0.85 + this.rnd() * 0.3 });
+        list.push({ type, x, y: h, z, rot: this.rnd() * Math.PI * 2, s: 0.75 + this.rnd() * 0.6, hp: PROP_INFO[type].hp, alive: true, dead: 0, tint: 0.8 + this.rnd() * 0.35, hue: this.rnd() });
       }
       const meshes = parts[type].map(p => {
         const m = new THREE.InstancedMesh(p.geo, p.mat, list.length);
@@ -119,7 +119,7 @@ export class World {
       const col = new THREE.Color();
       list.forEach((it, i) => {
         it.index = i; it.meshes = meshes; this.props.push(it); this._writeInstance(it, 1);
-        meshes.forEach(mm => { if (mm.tintable && mm.mesh.setColorAt) { col.setRGB(it.tint, 0.9 + (it.tint - 0.85) * 0.5, it.tint * 0.95); mm.mesh.setColorAt(i, col); } });
+        meshes.forEach(mm => { if (mm.tintable && mm.mesh.setColorAt) { col.setRGB(it.tint * (0.9 + it.hue * 0.3), 0.85 + (it.tint - 0.85) * 0.6, it.tint * (1.0 - it.hue * 0.25)); mm.mesh.setColorAt(i, col); } });
       });
       meshes.forEach(mm => { mm.mesh.instanceMatrix.needsUpdate = true; if (mm.mesh.instanceColor) mm.mesh.instanceColor.needsUpdate = true; });
       this.byType[type] = list;
@@ -130,7 +130,7 @@ export class World {
     const barkMat = new THREE.MeshStandardMaterial({ color: w.trunk, roughness: 1, map: T.bark ? T.bark.diff : null, normalMap: T.bark ? T.bark.nor : null });
     if (T.bark && T.bark.diff) barkMat.color.set(0xffffff).lerp(new THREE.Color(w.trunk), 0.35);
     const trunk = new THREE.CylinderGeometry(0.17, 0.3, 2.6, 7); trunk.translate(0, 1.3, 0);
-    const leafMat = new THREE.MeshStandardMaterial({ color: w.treeColor, roughness: 0.85 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: w.treeColor, roughness: 0.95, flatShading: true });
     if (w.id === 1) {
       const body = new THREE.CapsuleGeometry(0.38, 2.4, 6, 10); body.translate(0, 1.6, 0);
       const arm = new THREE.CapsuleGeometry(0.2, 0.9, 4, 8); arm.rotateZ(Math.PI / 2); arm.translate(0.6, 1.7, 0);
@@ -142,10 +142,13 @@ export class World {
       const cap = new THREE.ConeGeometry(0.9, 0.5, 8); cap.translate(0, 5.5, 0);
       g.tree = [{ geo: trunk, mat: barkMat }, { geo: c1, mat: leafMat, tintable: true }, { geo: c2, mat: leafMat, tintable: true }, { geo: c3, mat: leafMat, tintable: true }, { geo: cap, mat: snowMat }];
     } else {
-      const c1 = new THREE.IcosahedronGeometry(1.55, 2); c1.translate(0, 3.1, 0);
-      const c2 = new THREE.IcosahedronGeometry(1.1, 2); c2.translate(0.9, 3.7, 0.4);
-      const c3 = new THREE.IcosahedronGeometry(1.0, 2); c3.translate(-0.8, 3.9, -0.5);
-      g.tree = [{ geo: trunk, mat: barkMat }, { geo: c1, mat: leafMat, tintable: true }, { geo: c2, mat: leafMat, tintable: true }, { geo: c3, mat: leafMat, tintable: true }];
+      // 나뭇잎 카드(교차 판) 수관 — 블롭보다 훨씬 나무처럼 보임
+      const cardMat = new THREE.MeshStandardMaterial({ map: leafCardTexture(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 1, color: w.id === 3 ? 0xd9a6ff : 0xffffff });
+      const mk = (ry, rx, y, sz) => { const q = new THREE.PlaneGeometry(sz, sz); q.rotateX(rx); q.rotateY(ry); q.translate(0, y, 0); return { geo: q, mat: cardMat, tintable: true }; };
+      const br = new THREE.CylinderGeometry(0.06, 0.12, 1.4, 5); br.rotateZ(0.7); br.translate(0.5, 3.0, 0.2);
+      const br2 = new THREE.CylinderGeometry(0.05, 0.1, 1.2, 5); br2.rotateZ(-0.6); br2.rotateY(1.3); br2.translate(-0.4, 3.1, -0.2);
+      g.tree = [{ geo: trunk, mat: barkMat }, { geo: br, mat: barkMat }, { geo: br2, mat: barkMat },
+        mk(0, 0, 3.6, 3.6), mk(Math.PI / 3, 0, 3.7, 3.4), mk(-Math.PI / 3, 0, 3.5, 3.5), mk(0.4, Math.PI / 2, 3.9, 3.2), mk(1.2, 0.5, 4.3, 2.6)];
     }
     const rockMat = new THREE.MeshStandardMaterial({ color: T.rock ? 0xffffff : w.rockColor, roughness: 0.95, map: T.rock ? T.rock.diff : null, normalMap: T.rock ? T.rock.nor : null, flatShading: !T.rock });
     const rock = new THREE.DodecahedronGeometry(1, 1); rock.scale(1, 0.75, 1); rock.translate(0, 0.45, 0);
@@ -160,8 +163,9 @@ export class World {
     const cry2 = new THREE.OctahedronGeometry(0.45, 0); cry2.scale(0.6, 1.5, 0.6); cry2.translate(0.5, 0.7, 0.2);
     const cryMat = new THREE.MeshStandardMaterial({ color: 0x9af0ff, emissive: 0x2ab6d8, emissiveIntensity: 0.8, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.9 });
     g.crystal = [{ geo: cry, mat: cryMat }, { geo: cry2, mat: cryMat }];
-    const gr = new THREE.ConeGeometry(0.3, 0.9, 5); gr.translate(0, 0.45, 0);
-    g.grass = [{ geo: gr, mat: new THREE.MeshStandardMaterial({ color: w.id === 3 ? 0x9a6ad0 : 0x7fbf5a, roughness: 1 }), tintable: true }];
+    const gq = new THREE.PlaneGeometry(1.6, 1.3); gq.translate(0, 0.6, 0); const gq2 = gq.clone(); gq2.rotateY(Math.PI / 2); const gq3 = gq.clone(); gq3.rotateY(Math.PI / 4);
+    const gMat = new THREE.MeshStandardMaterial({ map: grassBladeTexture(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, color: w.id === 3 ? 0xc9a6ff : w.id === 1 ? 0xd8c890 : 0xffffff });
+    g.grass = [{ geo: gq, mat: gMat }, { geo: gq2, mat: gMat }, { geo: gq3, mat: gMat }];
     return g;
   }
   _buildGrass() {

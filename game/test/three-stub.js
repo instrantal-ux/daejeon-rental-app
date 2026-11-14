@@ -61,6 +61,6 @@ Object.defineProperty(CanvasTexture.prototype, "repeat", { get() { return this._
 Object.defineProperty(CanvasTexture.prototype, "offset", { get() { return this._o || (this._o = new Vector2()); } });
 InstancedMesh.prototype.setColorAt = function () { this.instanceColor = this.instanceColor || { needsUpdate: false }; };
 Light.prototype.__shadow = null;
-Object.defineProperty(Light.prototype, "shadow", { get() { return this._s || (this._s = { mapSize: new Vector2(), camera: {}, bias: 0, normalBias: 0 }); } });
+Object.defineProperty(Light.prototype, "shadow", { get() { return this._s || (this._s = { mapSize: new Vector2(), camera: { updateProjectionMatrix() {} }, bias: 0, normalBias: 0 }); } });
 Object.defineProperty(WebGLRenderer.prototype, "shadowMap", { get() { return this._sm || (this._sm = { enabled: false, type: 0 }); } });
 void _pg;
