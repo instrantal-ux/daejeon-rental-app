@@ -58,6 +58,9 @@
     <div class="tsec">오늘의 퀘스트 <span id="questDate"></span></div>
     <div id="quests"></div>
 
+    <div class="tsec">랭킹 <span id="rankNote"></span></div>
+    <div id="rank"></div>
+
     <div class="tsec">이번 달 <span id="homeMonthLbl"></span></div>
     <section class="sum home-sum" aria-label="이번 달 집계">
       <div class="tile"><span class="lbl">들어온 돈</span><span class="num in" id="homeIn">0원</span></div>
@@ -255,6 +258,9 @@
 
   <!-- ===== 더보기 (내보내기·백업·정보) ===== -->
   <section id="viewMore" class="more" hidden>
+    <div class="tsec">계정 · 동기화 <span id="syncNote"></span></div>
+    <div class="morebox" id="acctBox"></div>
+
     <div class="tsec">내보내기 <span>엑셀로 바탕화면·세무사에게</span></div>
     <div class="morebox">
       <div class="row">
@@ -288,12 +294,12 @@
     <div class="morebox">
       <div class="trow"><div class="k">버전</div><div class="v mono" id="appVer">-</div></div>
       <div class="trow"><div class="k">기록 수</div><div class="v mono" id="appCounts">-</div></div>
-      <div class="trow"><div class="k">저장 위치</div><div class="v">이 기기 안</div></div>
+      <div class="trow"><div class="k">저장 위치</div><div class="v" id="appWhere">이 기기 안</div></div>
       <div class="row" style="margin-top:10px">
         <button type="button" class="ghost" id="checkUpdBtn">업데이트 확인</button>
         <p class="msg" id="uMsg" hidden></p>
       </div>
-      <p class="fine">데이터는 폰 안에만 있어. 앱을 지우면 같이 지워지니까 가끔 백업 파일을 만들어 둬. 폰↔PC 동기화는 2차 버전에서.</p>
+      <p class="fine">로그인하면 서버에도 저장돼서 폰·PC 어디서든 같은 장부를 봐. 로그인 안 해도 이 기기 안에서는 다 돌아가.</p>
     </div>
 
     <div class="tsec">위험 구역</div>

@@ -9,6 +9,8 @@ import { initCalendar, renderCalendar } from "./calendar.js";
 import { initHome, renderHome, reward } from "./home.js";
 import { initMore, renderMore } from "./exportx.js";
 import { checkUpdate } from "./update.js";
+import * as C from "./cloud.js";
+import { initAccount, renderAccount, renderRank } from "./account.js";
 import { BOOK_LABEL } from "./data.js";
 import { loadNative } from "./native.js";
 
@@ -22,13 +24,14 @@ S.setPersistHook(json => {
   fs.writeFile({ path: "ledger-autosave.json", data: json, directory: "DATA", encoding: "utf8" }).catch(() => {});
 });
 
-function onAction(action, ctx) { reward(action, ctx); }
+function onAction(action, ctx) { reward(action, ctx); C.syncSoon(); }
 
 initLedger({ onAction, loadPayEdit });
 initTax({ onAction });
 initCalendar();
 initHome({});
-initMore({ onAction, onRestore: () => renderAll() });
+initMore({ onAction, onRestore: () => { renderAll(); C.syncSoon(); } });
+initAccount();
 
 // ---- 상단 ----
 function periodLabel() {
@@ -70,11 +73,12 @@ function applyHash() {
 }
 function renderAll() {
   periodLabel();
-  renderHome(); renderLedger(); renderCalendar(); renderTax(); renderMore();
+  renderHome(); renderLedger(); renderCalendar(); renderTax(); renderMore(); renderAccount();
+  if (P.view === "home") renderRank(false);
 }
 window.addEventListener("hashchange", applyHash);
 onPeriod(renderAll);
-S.subscribe(() => renderAll());
+S.subscribe(what => { renderAll(); if (what === "entries" || what === "payouts" || what === "settings") C.syncSoon(); });
 applyHash();
 
 // ---- 안드로이드 뒤로가기: 홈이 아니면 홈으로, 홈이면 종료 ----
@@ -85,14 +89,15 @@ applyHash();
     const lu = $("levelup"); if (!lu.hidden) { lu.hidden = true; return; }
     if (P.view !== "home") location.hash = "#home"; else if (app.exitApp) app.exitApp();
   });
-  app.addListener("resume", () => { S.flush(); setTimeout(() => checkUpdate().catch(() => {}), 1500); });
+  app.addListener("resume", () => { S.flush(); C.sync({ quiet: true }); setTimeout(() => checkUpdate().catch(() => {}), 1500); });
   app.addListener("pause", () => S.flush());
 })();
 window.addEventListener("pagehide", () => S.flush());
 window.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") S.flush(); });
 
-// ---- 새 버전 확인 ----
+// ---- 새 버전 확인 · 켤 때 동기화 ----
 setTimeout(() => checkUpdate().catch(() => {}), 2500);
+setTimeout(() => C.sync({ quiet: true }), 800);
 $("checkUpdBtn").addEventListener("click", async () => {
   const m = $("uMsg"); m.hidden = false; m.className = "msg ok"; m.textContent = "확인 중…";
   try {

@@ -256,3 +256,16 @@ button { cursor: pointer; }
 .levelup .ttl { color: var(--gold); font-weight: 700; }
 .levelup .add { margin: 14px auto 0; display: block; }
 @media (prefers-reduced-motion: reduce) { .bar i, .xpbar i { transition: none; } .char.bounce svg, .toast, .levelup .card { animation: none; } }
+
+/* 계정·랭킹 */
+.acct input[type="email"], .acct input[type="password"], .acct input[type="text"] { width: 100%; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); padding: 10px; font-size: 15px; color: var(--fg); }
+.acct .btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.acct .btns .add { margin-left: 0; }
+.rankrow { display: grid; grid-template-columns: 2em 1fr auto; gap: 4px 10px; align-items: center; padding-block: 8px; border-bottom: 1px solid var(--rule); font-size: 14px; }
+.rankrow .no { font-family: var(--mono); font-weight: 700; color: var(--muted); text-align: center; }
+.rankrow .no.top { color: var(--gold); font-size: 16px; }
+.rankrow .nm b { font-weight: 600; } .rankrow .nm small { display: block; color: var(--muted); font-size: 12px; }
+.rankrow .xp { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.rankrow.me { background: var(--gold-soft); border-radius: 8px; padding-inline: 6px; }
+.syncdot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: var(--muted); margin-right: 4px; vertical-align: middle; }
+.syncdot.on { background: var(--in); } .syncdot.busy { background: var(--gold); } .syncdot.bad { background: var(--warn); }

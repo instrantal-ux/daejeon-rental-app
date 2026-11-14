@@ -11,6 +11,11 @@
 - 웹 버전: https://instrantal-ux.github.io/daejeon-rental-app/ (저장소 설정에서 Pages 가 켜진 뒤부터)
 - 폰과 PC 데이터는 아직 따로 저장됨 (2차: 동기화). 옮길 땐 더보기 → 백업 파일 → 다른 기기에서 불러오기
 
+## 서버 (Supabase) 처음 설정 — 한 번만
+1. SQL Editor 에서 `supabase/schema.sql` 내용 실행 (표·보안 규칙 생성)
+2. Authentication → Sign In / Providers → Email 에서 "Confirm email" 끄기 (안 끄면 가입 때 확인 메일을 눌러야 함)
+3. 앱 접속 정보는 `www/js/config.js` (publishable 키는 공개용)
+
 ## 구조
 ```
 www/            앱 화면 (순수 HTML/JS, 번들러 없음)

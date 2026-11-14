@@ -108,7 +108,7 @@ function showLevelUp(L) {
 export function initHome(h) {
   $("renameBtn").addEventListener("click", () => {
     const g = getGame(); const nm = prompt("캐릭터 이름", g.name || "석재");
-    if (nm && nm.trim()) { game.name = nm.trim().slice(0, 12); save(); renderHome(); }
+    if (nm && nm.trim()) { game.name = nm.trim().slice(0, 12); save(); renderHome(); import("./cloud.js").then(C => C.pushProfile().catch(() => {})); }
   });
   $("homeGoLedger").addEventListener("click", () => { location.hash = "#all"; setTimeout(() => { const a = $("amt"); if (a) { a.scrollIntoView({ behavior: "smooth", block: "center" }); a.focus(); } }, 120); });
   $("homeGoTax").addEventListener("click", () => { location.hash = "#tax"; });
