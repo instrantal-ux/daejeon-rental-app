@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>포탈 월드</title>
+<link rel="stylesheet" href="css/game.css">
+<link rel="icon" href="img/icon-192.png">
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "@capacitor/core": "./vendor/cap/core.js",
+  "@capacitor/app": "./vendor/cap/app/index.js",
+  "@capacitor/browser": "./vendor/cap/browser/index.js"
+} }
+</script>
+<script src="version.js"></script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<!-- 시작 화면 -->
+<div id="title" class="title">
+  <div class="title-card">
+    <h1>포탈 월드</h1>
+    <p class="sub">넓은 세계를 뛰어다니며 모으고, 만들고, 포탈을 열어 다음 세계로.</p>
+    <div class="title-row">
+      <input id="nickInput" maxlength="12" placeholder="모험가 이름">
+      <button id="startBtn" class="big">모험 시작</button>
+    </div>
+    <p class="fine" id="titleInfo"></p>
+    <p class="fine">왼쪽 화면: 조이스틱 · 오른쪽 화면: 시야 돌리기 · 버튼: 점프 / 행동</p>
+  </div>
+</div>
+
+<!-- 게임 UI -->
+<div id="hud" class="hud" hidden>
+  <div class="topbar">
+    <div class="lv"><b>Lv.<span id="lvNum">1</span></b><div class="lvbar"><i id="lvFill"></i></div><span id="scoreTxt" class="mono">0</span></div>
+    <div class="world" id="worldName">초록 평원</div>
+    <div class="top-btns">
+      <button class="hud-btn small" id="btnBag" aria-label="가방">🎒</button>
+      <button class="hud-btn small" id="btnMenu" aria-label="메뉴">☰</button>
+    </div>
+  </div>
+  <div class="quick" id="quick"></div>
+  <div class="target" id="target" hidden><span id="targetTxt"></span><div class="prog"><i id="progFill"></i></div></div>
+  <div class="hint" id="hint"></div>
+  <div id="updateBar" class="updatebar" hidden></div>
+
+  <div id="joy" class="joy"><div class="joyKnob" id="joyKnob"></div></div>
+  <div class="btns-right">
+    <button class="hud-btn act" id="btnAct">행동</button>
+    <button class="hud-btn jump" id="btnJump">점프</button>
+  </div>
+  <div class="toasts" id="toasts"></div>
+</div>
+
+<!-- 패널 (가방·제작·설치·랭킹·계정) -->
+<div id="panel" class="panel" hidden>
+  <div class="panel-head">
+    <div class="tabs">
+      <button data-tab="bag" class="on">가방</button>
+      <button data-tab="craft">제작</button>
+      <button data-tab="build">설치</button>
+      <button data-tab="rank">랭킹</button>
+      <button data-tab="acct">계정</button>
+    </div>
+    <button class="hud-btn small" id="panelClose">✕</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+
+<div id="fade" class="fade"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

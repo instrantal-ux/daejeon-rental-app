@@ -1,0 +1,15 @@
+{
+  "name": "portal-world",
+  "version": "0.1.0",
+  "private": true,
+  "description": "포탈 월드 — 3D 오픈월드 채집·제작·멀티버스 (안드로이드/웹)",
+  "scripts": { "build": "node scripts/build-www.mjs", "android:prepare": "node scripts/prepare-android.mjs", "smoke": "node test/smoke.mjs" },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/browser": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "three": "0.170.0"
+  },
+  "devDependencies": { "@capacitor/assets": "^3.0.5", "@capacitor/cli": "^7.0.0" }
+}

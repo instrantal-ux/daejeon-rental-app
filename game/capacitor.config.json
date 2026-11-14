@@ -1,0 +1,7 @@
+{
+  "appId": "kr.instrantal.portalworld",
+  "appName": "포탈 월드",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false, "backgroundColor": "#0b1020" }
+}

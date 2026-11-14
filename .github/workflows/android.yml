@@ -3,6 +3,7 @@ name: APK 빌드 · 릴리스 · 웹 배포
 on:
   push:
     branches: [main]
+    paths-ignore: ["game/**"]
   workflow_dispatch:
 
 permissions:

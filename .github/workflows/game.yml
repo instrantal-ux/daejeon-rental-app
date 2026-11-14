@@ -1,0 +1,73 @@
+name: 포탈 월드 APK
+
+on:
+  push:
+    branches: [main]
+    paths: ["game/**", ".github/workflows/game.yml", "android-signing/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: game-main
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: 포탈 월드 안드로이드 APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+      - name: 버전 읽기
+        id: ver
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - run: npm install --no-audit --no-fund
+      - env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: node scripts/build-www.mjs
+      - run: |
+          npx cap add android
+          npx cap sync android
+      - run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#0b1020' --iconBackgroundColorDark '#0b1020' --splashBackgroundColor '#0b1020' --splashBackgroundColorDark '#0b1020'
+      - env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: if [ -n "$KEYSTORE_B64" ]; then echo "$KEYSTORE_B64" | base64 -d > ../android-signing/release.jks; fi
+      - env:
+          VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_PATH: ${{ github.workspace }}/android-signing/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'daejeon-rental-2026' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'ledger' }}
+        run: node scripts/prepare-android.mjs
+      - working-directory: game/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+      - run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/portal-world-v${{ steps.ver.outputs.version }}.apk"
+          node scripts/release-notes.mjs > dist/notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portal-world-v${{ steps.ver.outputs.version }}
+          path: game/dist/*.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: game-v${{ steps.ver.outputs.version }}
+          name: 포탈 월드 v${{ steps.ver.outputs.version }}
+          body_path: game/dist/notes.md
+          files: game/dist/*.apk
+          make_latest: false
