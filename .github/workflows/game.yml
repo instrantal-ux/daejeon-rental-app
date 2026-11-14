@@ -39,6 +39,8 @@ jobs:
       - env:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: node scripts/build-www.mjs
+      - name: 지형 텍스처·HDRI 받기 (Poly Haven CC0)
+        run: node scripts/fetch-assets.mjs
       - run: |
           npx cap add android
           npx cap sync android

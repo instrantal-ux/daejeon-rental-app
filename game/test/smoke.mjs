@@ -33,7 +33,7 @@ const shot = async name => { const r = await send("Page.captureScreenshot", { fo
 
 await send("Page.navigate", { url: `http://127.0.0.1:${PORT}/index.html` }); await sleep(900);
 await shot("01-title");
-await ev("document.getElementById('nickInput').value='석재'; document.getElementById('startBtn').click(); 'ok'"); await sleep(1500);
+await ev("document.getElementById('nickInput').value='석재'; document.getElementById('startBtn').click(); 'ok'"); await ev("window.__game.ready"); await sleep(1500);
 console.log("world props:", await ev("window.__game.world.props.length"), "frames:", await ev("window.__game.renderer.frames"));
 await shot("02-hud");
 // 앞으로 달리기 2초

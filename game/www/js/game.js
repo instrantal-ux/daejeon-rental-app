@@ -7,6 +7,7 @@ import * as I from "./items.js";
 import { HUD } from "./hud.js";
 import * as C from "./cloud.js";
 import { checkUpdate, openUrl } from "./update.js";
+import { loadAssets, loadEnv } from "./assets.js";
 
 const SAVE_KEY = "pw.save.v1";
 const DAY_LEN = 360;             // 하루 길이(초)
@@ -24,11 +25,14 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
+    this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 900);
     this.camYaw = 0.6; this.camPitch = 0.42; this.camDist = 7.5;
     this.sun = new THREE.DirectionalLight(0xffffff, 2.2); this.scene.add(this.sun); this.scene.add(this.sun.target);
+    this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048); this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.03;
+    const sc = this.sun.shadow.camera; sc.left = sc.bottom = -45; sc.right = sc.top = 45; sc.near = 10; sc.far = 320;
     this.hemi = new THREE.HemisphereLight(0xbfdfff, 0x6b5a3a, 0.9); this.scene.add(this.hemi);
     this.player = new Player(); this.scene.add(this.player.group);
     this.input = new Input(document.body);
@@ -36,8 +40,8 @@ export class Game {
     this.clock = new THREE.Clock();
     this.target = null; this.prog = 0; this.lastSave = 0; this.lastCloud = 0; this.cloudSavedAt = 0; this.dayT = this.state.day;
     this.portalCool = 0; this.lastPos = new THREE.Vector3();
-    this.loadWorld(this.state.world, true);
-    this.player.setTool(this.state.tool);
+    this.elapsed = 0;
+    this.ready = loadAssets(this.renderer).catch(() => null).then(() => { this.loadWorld(this.state.world, true); this.player.setTool(this.state.tool); });
     window.addEventListener("resize", () => this.resize()); this.resize();
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { this.save(); this.cloudSave(false).catch(() => {}); } });
     this._raf = this._raf || (() => {});
@@ -49,6 +53,8 @@ export class Game {
     if (this.world) { this.scene.remove(this.world.group); this.world.dispose(); }
     const def = WORLDS[id]; this.world = new World(def); this.scene.add(this.world.group);
     this.scene.background = new THREE.Color(def.sky); this.scene.fog = new THREE.Fog(def.sky, def.fogNear, def.fogFar);
+    this.env = null; this.scene.environment = null;
+    loadEnv(def.hdri).then(env => { if (this.world.def !== def || !env) return; this.env = env; this.scene.environment = env.env; this.scene.background = env.sky; });
     this.state.world = id; if (!this.state.placed[id]) this.state.placed[id] = [];
     this.state.placed[id].forEach(p => this.world.place(p.kind, p.x, p.z, p.rotY));
     const p = this.state.pos[id];
@@ -151,7 +157,9 @@ export class Game {
     this.hemi.intensity = 0.25 + day * 0.75;
     const sky = new THREE.Color(this.world.def.sky), night = new THREE.Color(0x0a0e22), dusk = new THREE.Color(0xff8a5a);
     const c = night.clone().lerp(sky, day); if (day > 0.05 && day < 0.6) c.lerp(dusk, (0.6 - Math.abs(day - 0.3) * 2) * 0.5);
-    this.scene.background = c; this.scene.fog.color.copy(c);
+    if (this.env) { this.scene.backgroundIntensity = 0.12 + day * 0.88; this.scene.environmentIntensity = 0.25 + day * 0.75; this.scene.backgroundBlurriness = 0.02; }
+    else this.scene.background = c;
+    this.scene.fog.color.copy(c);
     this.scene.fog.near = this.world.def.fogNear * (0.6 + day * 0.4); this.scene.fog.far = this.world.def.fogFar * (0.55 + day * 0.45);
   }
 
@@ -166,7 +174,7 @@ export class Game {
   }
 
   // ---- 루프 ----
-  start() { this.running = true; this.clock.start(); const loop = () => { if (!this.running) return; this.frame(); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  async start() { await this.ready; this.running = true; this.clock.start(); const loop = () => { if (!this.running) return; this.frame(); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
   frame() {
     const dt = Math.min(0.05, this.clock.getDelta());
     const inp = this.input.poll();
@@ -174,7 +182,7 @@ export class Game {
     this.player.update(dt, { mx: inp.mx, mz: inp.mz, jump: inp.jump, sprint: inp.sprint }, this.camYaw, this.world.heightAt, this.world.def.water);
     const moved = this.player.pos.distanceTo(this.lastPos); if (moved < 3) this.state.stats.distance += moved; this.lastPos.copy(this.player.pos);
     const tg = this.gatherTick(dt, inp);
-    this.world.tick(dt); this.portalTick(dt); this.dayTick(dt); this.cameraTick(dt, inp);
+    this.elapsed += dt; this.world.tick(dt, this.elapsed); this.portalTick(dt); this.dayTick(dt); this.cameraTick(dt, inp);
     this.hud.update(this.state, tg, this.prog);
     this.renderer.render(this.scene, this.camera);
     const now = performance.now();

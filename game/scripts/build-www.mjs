@@ -8,4 +8,9 @@ if (!fs.existsSync(three)) { console.error("three.module.js 없음 — npm insta
 fs.copyFileSync(three, path.join(vend, "three.module.js"));
 const core = path.join(ROOT, "node_modules/@capacitor/core/dist/index.js"); if (fs.existsSync(core)) fs.copyFileSync(core, path.join(vend, "cap/core.js"));
 for (const n of ["app", "browser"]) { const esm = path.join(ROOT, "node_modules/@capacitor", n, "dist/esm"); if (fs.existsSync(esm)) fs.cpSync(esm, path.join(vend, "cap", n), { recursive: true }); }
+const jsm = path.join(ROOT, "node_modules/three/examples/jsm");
+for (const f of ["loaders/RGBELoader.js", "loaders/GLTFLoader.js", "utils/BufferGeometryUtils.js"]) {
+  const src = path.join(jsm, f); if (!fs.existsSync(src)) { console.warn("addon 없음:", f); continue; }
+  const dst = path.join(vend, "addons", f); fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.copyFileSync(src, dst);
+}
 console.log("버전", pkg.version, "three 복사 완료");
